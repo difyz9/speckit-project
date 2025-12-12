@@ -23,201 +23,201 @@ description: Generate a custom checklist for the current feature based on user r
 
 **比喻**：如果您的规范像用英语写的代码，那么检查清单就是其单元测试。您是在测试需求本身是否写得好、完整、无歧义并准备好实施——而不是测试实现是否可行。
 
-## User Input
+## 用户输入
 
 ```text
 $ARGUMENTS
 ```
 
-You **MUST** consider the user input before proceeding (if not empty).
+在继续之前，您**必须**考虑用户输入（如果不为空）。
 
-## Execution Steps
+## 执行步骤
 
-1. **Setup**: Run `.specify/scripts/powershell/check-prerequisites.ps1 -Json` from repo root and parse JSON for FEATURE_DIR and AVAILABLE_DOCS list.
-   - All file paths must be absolute.
-   - For single quotes in args like "I'm Groot", use escape syntax: e.g 'I'\''m Groot' (or double-quote if possible: "I'm Groot").
+1. **准备**：在仓库根目录运行 `.specify/scripts/powershell/check-prerequisites.ps1 -Json` 并解析 JSON 以获取 `FEATURE_DIR` 和 `AVAILABLE_DOCS` 列表。
+   - 所有文件路径必须是绝对路径。
+   - 对于参数中的单引号（如 "I'm Groot"），使用转义语法，例如 'I'\''m Groot'（或尽量使用双引号："I'm Groot"）。
 
-2. **Clarify intent (dynamic)**: Derive up to THREE initial contextual clarifying questions (no pre-baked catalog). They MUST:
-   - Be generated from the user's phrasing + extracted signals from spec/plan/tasks
-   - Only ask about information that materially changes checklist content
-   - Be skipped individually if already unambiguous in `$ARGUMENTS`
-   - Prefer precision over breadth
+2. **澄清意图（动态）**：从用户表达与 spec/plan/tasks 中提取信号，生成最多三条初始上下文澄清问题（非预设目录）。这些问题必须：
+   - 基于用户措辞和从规范/计划/任务中提取的信号生成
+   - 仅询问会实质改变检查表内容的信息
+   - 若在 `$ARGUMENTS` 中已明确，则单项跳过
+   - 优先精确而非广泛
 
-   Generation algorithm:
-   1. Extract signals: feature domain keywords (e.g., auth, latency, UX, API), risk indicators ("critical", "must", "compliance"), stakeholder hints ("QA", "review", "security team"), and explicit deliverables ("a11y", "rollback", "contracts").
-   2. Cluster signals into candidate focus areas (max 4) ranked by relevance.
-   3. Identify probable audience & timing (author, reviewer, QA, release) if not explicit.
-   4. Detect missing dimensions: scope breadth, depth/rigor, risk emphasis, exclusion boundaries, measurable acceptance criteria.
-   5. Formulate questions chosen from these archetypes:
-      - Scope refinement (e.g., "Should this include integration touchpoints with X and Y or stay limited to local module correctness?")
-      - Risk prioritization (e.g., "Which of these potential risk areas should receive mandatory gating checks?")
-      - Depth calibration (e.g., "Is this a lightweight pre-commit sanity list or a formal release gate?")
-      - Audience framing (e.g., "Will this be used by the author only or peers during PR review?")
-      - Boundary exclusion (e.g., "Should we explicitly exclude performance tuning items this round?")
-      - Scenario class gap (e.g., "No recovery flows detected—are rollback / partial failure paths in scope?")
+   生成算法要点：
+   1. 提取信号：领域关键字（如：auth、latency、UX、API）、风险指示词（“critical”、“must”、“compliance”）、相关干系人提示（“QA”、“review”、“security team”）和明确交付物（“a11y”、“rollback”、“contracts”）。
+   2. 将信号聚类为候选关注领域（最多 4 个），按相关性排序。
+   3. 若未明确，识别可能的受众与使用时机（作者、审阅者、QA、发布）。
+   4. 检测缺失维度：范围宽度、深度/严格度、风险侧重、排除边界、可测验的验收标准。
+   5. 从下列原型中形成问题：
+      - 范围细化（例如：“是否应包含与 X 和 Y 的集成触点，还是仅限本地模块正确性？”）
+      - 风险优先级（例如：“哪些潜在风险领域应作为强制门控检查？”）
+      - 深度校准（例如：“这是轻量级的 pre-commit 健康检查，还是正式的发布门槛？”）
+      - 受众定位（例如：“这将由作者单独使用还是在 PR 审查时由同行使用？”）
+      - 边界排除（例如：“本轮是否明确排除性能调优项？”）
+      - 场景类别缺口（例如：“未检测到恢复流程——回滚/部分失败路径是否在范围内？”）
 
-   Question formatting rules:
-   - If presenting options, generate a compact table with columns: Option | Candidate | Why It Matters
-   - Limit to A–E options maximum; omit table if a free-form answer is clearer
-   - Never ask the user to restate what they already said
-   - Avoid speculative categories (no hallucination). If uncertain, ask explicitly: "Confirm whether X belongs in scope."
+   问题格式规则：
+   - 若展示选项，生成紧凑表格，列为：Option | Candidate | Why It Matters
+   - 选项最多 A–E；若自由格式更清晰则省略表格
+   - 切勿要求用户重复已提供的信息
+   - 避免猜测性类别（不虚构）。若不确定，需明确询问："确认 X 是否属于范围。"
 
-   Defaults when interaction impossible:
-   - Depth: Standard
-   - Audience: Reviewer (PR) if code-related; Author otherwise
-   - Focus: Top 2 relevance clusters
+   无法交互时的默认值：
+   - 深度：标准
+   - 受众：若与代码相关则为 Reviewer (PR)，否则为 Author
+   - 关注点：前两个相关性聚类
 
-   Output the questions (label Q1/Q2/Q3). After answers: if ≥2 scenario classes (Alternate / Exception / Recovery / Non-Functional domain) remain unclear, you MAY ask up to TWO more targeted follow‑ups (Q4/Q5) with a one-line justification each (e.g., "Unresolved recovery path risk"). Do not exceed five total questions. Skip escalation if user explicitly declines more.
+   输出问题并标注 Q1/Q2/Q3。回答后：若仍有 ≥2 个场景类别（Alternate / Exception / Recovery / Non-Functional）不清晰，可额外询问最多两条后续问题（Q4/Q5），并为每条提供一行理由（例如：“未解决的恢复路径风险”）。总问题数不超过五条。如用户明确拒绝更多问题，则跳过升级。
 
-3. **Understand user request**: Combine `$ARGUMENTS` + clarifying answers:
-   - Derive checklist theme (e.g., security, review, deploy, ux)
-   - Consolidate explicit must-have items mentioned by user
-   - Map focus selections to category scaffolding
-   - Infer any missing context from spec/plan/tasks (do NOT hallucinate)
+3. **理解用户请求**：将 `$ARGUMENTS` 与澄清答案结合：
+   - 推断检查表主题（例如 security、review、deploy、ux）
+   - 整合用户明确要求的必须项
+   - 将关注选择映射到类别骨架
+   - 从 spec/plan/tasks 推断缺失上下文（不得虚构）
 
-4. **Load feature context**: Read from FEATURE_DIR:
-   - spec.md: Feature requirements and scope
-   - plan.md (if exists): Technical details, dependencies
-   - tasks.md (if exists): Implementation tasks
+4. **加载功能上下文**：从 `FEATURE_DIR` 读取：
+   - `spec.md`：功能需求与范围
+   - `plan.md`（如存在）：技术细节、依赖
+   - `tasks.md`（如存在）：实现任务
 
-   **Context Loading Strategy**:
-   - Load only necessary portions relevant to active focus areas (avoid full-file dumping)
-   - Prefer summarizing long sections into concise scenario/requirement bullets
-   - Use progressive disclosure: add follow-on retrieval only if gaps detected
-   - If source docs are large, generate interim summary items instead of embedding raw text
+   **上下文加载策略**：
+   - 仅加载与当前关注区域相关的必要部分（避免完整文件倾倒）
+   - 优先将冗长章节摘要为简洁的场景/需求要点
+   - 使用渐进式公开：仅在发现空白时检索后续内容
+   - 若来源文档非常大，生成中间摘要项而非嵌入原始文本
 
-5. **Generate checklist** - Create "Unit Tests for Requirements":
-   - Create `FEATURE_DIR/checklists/` directory if it doesn't exist
-   - Generate unique checklist filename:
-     - Use short, descriptive name based on domain (e.g., `ux.md`, `api.md`, `security.md`)
-     - Format: `[domain].md`
-     - If file exists, append to existing file
-   - Number items sequentially starting from CHK001
-   - Each `/speckit.checklist` run creates a NEW file (never overwrites existing checklists)
+5. **生成检查表** — 创建“需求的单元测试”：
+   - 若不存在则创建 `FEATURE_DIR/checklists/` 目录
+   - 生成唯一的检查表文件名：
+     - 使用基于领域的简短描述性名称（例如：`ux.md`、`api.md`、`security.md`）
+     - 格式：`[domain].md`
+     - 若文件已存在，则追加到现有文件
+   - 按顺序从 CHK001 开始编号条目
+   - 每次 `/speckit.checklist` 运行都会创建一个新文件（不会覆盖现有检查表）
 
-   **CORE PRINCIPLE - Test the Requirements, Not the Implementation**:
-   Every checklist item MUST evaluate the REQUIREMENTS THEMSELVES for:
-   - **Completeness**: Are all necessary requirements present?
-   - **Clarity**: Are requirements unambiguous and specific?
-   - **Consistency**: Do requirements align with each other?
-   - **Measurability**: Can requirements be objectively verified?
-   - **Coverage**: Are all scenarios/edge cases addressed?
+   **核心原则 - 测试需求，而非实现**：
+   每个检查表项必须评估需求本身的质量：
+   - **完整性**：是否包含所有必要需求？
+   - **清晰度**：需求是否明确且无歧义？
+   - **一致性**：需求之间是否相互一致？
+   - **可测量性**：是否能客观验证需求？
+   - **覆盖率**：是否覆盖所有场景/边界情况？
 
-   **Category Structure** - Group items by requirement quality dimensions:
-   - **Requirement Completeness** (Are all necessary requirements documented?)
-   - **Requirement Clarity** (Are requirements specific and unambiguous?)
-   - **Requirement Consistency** (Do requirements align without conflicts?)
-   - **Acceptance Criteria Quality** (Are success criteria measurable?)
-   - **Scenario Coverage** (Are all flows/cases addressed?)
-   - **Edge Case Coverage** (Are boundary conditions defined?)
-   - **Non-Functional Requirements** (Performance, Security, Accessibility, etc. - are they specified?)
-   - **Dependencies & Assumptions** (Are they documented and validated?)
-   - **Ambiguities & Conflicts** (What needs clarification?)
+   **类别结构** — 按需求质量维度分组条目：
+   - **需求完整性**（是否记录了所有必要需求？）
+   - **需求清晰度**（需求是否具体且无歧义？）
+   - **需求一致性**（需求是否无冲突？）
+   - **验收标准质量**（成功标准是否可衡量？）
+   - **场景覆盖**（是否涵盖所有流程/情况？）
+   - **边界情况覆盖**（是否定义边界条件？）
+   - **非功能需求**（性能、安全、可访问性等是否有说明？）
+   - **依赖与假设**（是否已记录并验证？）
+   - **歧义与冲突**（哪些需要澄清？）
 
-   **HOW TO WRITE CHECKLIST ITEMS - "Unit Tests for English"**:
+   **如何编写检查表项 - “对英语的单元测试”**：
 
-   ❌ **WRONG** (Testing implementation):
+   ❌ **错误示例**（测试实现）：
    - "Verify landing page displays 3 episode cards"
    - "Test hover states work on desktop"
    - "Confirm logo click navigates home"
 
-   ✅ **CORRECT** (Testing requirements quality):
-   - "Are the exact number and layout of featured episodes specified?" [Completeness]
-   - "Is 'prominent display' quantified with specific sizing/positioning?" [Clarity]
-   - "Are hover state requirements consistent across all interactive elements?" [Consistency]
-   - "Are keyboard navigation requirements defined for all interactive UI?" [Coverage]
-   - "Is the fallback behavior specified when logo image fails to load?" [Edge Cases]
-   - "Are loading states defined for asynchronous episode data?" [Completeness]
-   - "Does the spec define visual hierarchy for competing UI elements?" [Clarity]
+   ✅ **正确示例**（测试需求质量）：
+   - "是否明确规定了特色剧集的确切数量和布局？" [完整性]
+   - "'突出显示' 是否通过具体尺寸/位置量化？" [清晰度]
+   - "悬停状态要求在所有交互元素中是否一致？" [一致性]
+   - "是否为所有交互式 UI 定义了键盘导航要求？" [覆盖]
+   - "当 logo 图片加载失败时是否定义了回退行为？" [边界情况]
+   - "是否为异步剧集数据定义了加载态？" [完整性]
+   - "规范是否为相互竞争的 UI 元素定义了视觉层级？" [清晰度]
 
-   **ITEM STRUCTURE**:
-   Each item should follow this pattern:
-   - Question format asking about requirement quality
-   - Focus on what's WRITTEN (or not written) in the spec/plan
-   - Include quality dimension in brackets [Completeness/Clarity/Consistency/etc.]
-   - Reference spec section `[Spec §X.Y]` when checking existing requirements
-   - Use `[Gap]` marker when checking for missing requirements
+   **条目结构**：
+   每个条目应遵循以下模式：
+   - 以问题形式询问需求质量
+   - 关注规范/计划中已写（或未写）的内容
+   - 在方括号中包含质量维度 [完整性/清晰度/一致性/等]
+   - 检查现有需求时引用规范章节 `[Spec §X.Y]`
+   - 在检查缺失时使用 `[Gap]` 标记
 
-   **EXAMPLES BY QUALITY DIMENSION**:
+   **按质量维度的示例**：
 
-   Completeness:
-   - "Are error handling requirements defined for all API failure modes? [Gap]"
-   - "Are accessibility requirements specified for all interactive elements? [Completeness]"
-   - "Are mobile breakpoint requirements defined for responsive layouts? [Gap]"
+   完整性：
+   - "是否为所有 API 失败模式定义了错误处理需求？ [Gap]"
+   - "是否为所有交互元素指定了可访问性需求？ [完整性]"
+   - "是否为响应式布局定义了移动断点要求？ [Gap]"
 
-   Clarity:
-   - "Is 'fast loading' quantified with specific timing thresholds? [Clarity, Spec §NFR-2]"
-   - "Are 'related episodes' selection criteria explicitly defined? [Clarity, Spec §FR-5]"
-   - "Is 'prominent' defined with measurable visual properties? [Ambiguity, Spec §FR-4]"
+   清晰度：
+   - "'快速加载' 是否用具体时间阈值量化？ [清晰度, Spec §NFR-2]"
+   - "是否明确定义相关剧集的选择标准？ [清晰度, Spec §FR-5]"
+   - "'突出' 是否以可测量的视觉属性定义？ [歧义, Spec §FR-4]"
 
-   Consistency:
-   - "Do navigation requirements align across all pages? [Consistency, Spec §FR-10]"
-   - "Are card component requirements consistent between landing and detail pages? [Consistency]"
+   一致性：
+   - "导航要求在所有页面之间是否一致？ [一致性, Spec §FR-10]"
+   - "卡片组件在首页和详情页的要求是否一致？ [一致性]"
 
-   Coverage:
-   - "Are requirements defined for zero-state scenarios (no episodes)? [Coverage, Edge Case]"
-   - "Are concurrent user interaction scenarios addressed? [Coverage, Gap]"
-   - "Are requirements specified for partial data loading failures? [Coverage, Exception Flow]"
+   覆盖：
+   - "是否为空状态场景（无剧集）定义了需求？ [覆盖, 边界情况]"
+   - "是否考虑并发用户交互场景？ [覆盖, Gap]"
+   - "是否为部分数据加载失败定义了需求？ [覆盖, 异常流程]"
 
-   Measurability:
-   - "Are visual hierarchy requirements measurable/testable? [Acceptance Criteria, Spec §FR-1]"
-   - "Can 'balanced visual weight' be objectively verified? [Measurability, Spec §FR-2]"
+   可测量性：
+   - "视觉层级需求是否可测/可测试？ [验收标准, Spec §FR-1]"
+   - "'平衡的视觉权重' 是否能被客观验证？ [可测量性, Spec §FR-2]"
 
-   **Scenario Classification & Coverage** (Requirements Quality Focus):
-   - Check if requirements exist for: Primary, Alternate, Exception/Error, Recovery, Non-Functional scenarios
-   - For each scenario class, ask: "Are [scenario type] requirements complete, clear, and consistent?"
-   - If scenario class missing: "Are [scenario type] requirements intentionally excluded or missing? [Gap]"
-   - Include resilience/rollback when state mutation occurs: "Are rollback requirements defined for migration failures? [Gap]"
+   **场景分类与覆盖**（需求质量关注点）：
+   - 检查是否存在对以下场景的需求：主要、备用、异常/错误、恢复、非功能场景
+   - 对每个场景类别询问："该类别的需求是否完整、清晰且一致？"
+   - 若缺失该场景类别："该类别的需求是刻意排除还是遗漏？ [Gap]"
+   - 当发生状态变更时包含弹性/回滚："是否为迁移失败定义了回滚需求？ [Gap]"
 
-   **Traceability Requirements**:
-   - MINIMUM: ≥80% of items MUST include at least one traceability reference
-   - Each item should reference: spec section `[Spec §X.Y]`, or use markers: `[Gap]`, `[Ambiguity]`, `[Conflict]`, `[Assumption]`
-   - If no ID system exists: "Is a requirement & acceptance criteria ID scheme established? [Traceability]"
+   **可追溯性要求**：
+   - 最低要求：≥80% 的条目必须包含至少一个可追溯引用
+   - 每个条目应引用：规范章节 `[Spec §X.Y]`，或使用标记：`[Gap]`、`[Ambiguity]`、`[Conflict]`、`[Assumption]`
+   - 若无 ID 体系："是否建立了需求与验收标准的 ID 方案？ [Traceability]"
 
-   **Surface & Resolve Issues** (Requirements Quality Problems):
-   Ask questions about the requirements themselves:
-   - Ambiguities: "Is the term 'fast' quantified with specific metrics? [Ambiguity, Spec §NFR-1]"
-   - Conflicts: "Do navigation requirements conflict between §FR-10 and §FR-10a? [Conflict]"
-   - Assumptions: "Is the assumption of 'always available podcast API' validated? [Assumption]"
-   - Dependencies: "Are external podcast API requirements documented? [Dependency, Gap]"
-   - Missing definitions: "Is 'visual hierarchy' defined with measurable criteria? [Gap]"
+   **发现并解决问题**（需求质量问题）：
+   提出关于需求本身的问题：
+   - 歧义："'快速' 是否用具体指标量化？ [歧义, Spec §NFR-1]"
+   - 冲突："导航要求是否在 §FR-10 与 §FR-10a 间冲突？ [冲突]"
+   - 假设："'始终可用的 podcast API' 的假设是否已验证？ [假设]"
+   - 依赖："外部 podcast API 的需求是否已记录？ [依赖, Gap]"
+   - 缺失定义："'视觉层级' 是否有可衡量的定义？ [Gap]"
 
-   **Content Consolidation**:
-   - Soft cap: If raw candidate items > 40, prioritize by risk/impact
-   - Merge near-duplicates checking the same requirement aspect
-   - If >5 low-impact edge cases, create one item: "Are edge cases X, Y, Z addressed in requirements? [Coverage]"
+   **内容整合**：
+   - 软上限：若原始候选条目 > 40，则按风险/影响优先排序
+   - 合并近似重复项，检查是否在关注相同需求方面
+   - 若低影响的边界情况 >5 个，则合并为一条："是否在需求中处理了 X、Y、Z 等边界情况？ [覆盖]"
 
-   **🚫 ABSOLUTELY PROHIBITED** - These make it an implementation test, not a requirements test:
-   - ❌ Any item starting with "Verify", "Test", "Confirm", "Check" + implementation behavior
-   - ❌ References to code execution, user actions, system behavior
-   - ❌ "Displays correctly", "works properly", "functions as expected"
-   - ❌ "Click", "navigate", "render", "load", "execute"
-   - ❌ Test cases, test plans, QA procedures
-   - ❌ Implementation details (frameworks, APIs, algorithms)
+   **🚫 绝对禁止** — 使其成为实现测试而非需求测试的行为：
+   - ❌ 以 "Verify"、"Test"、"Confirm"、"Check" 开头且针对实现行为的条目
+   - ❌ 引用代码执行、用户动作或系统行为的条目
+   - ❌ "显示正确"、"工作正常"、"按预期运行" 等措辞
+   - ❌ 使用 "点击"、"导航"、"渲染"、"加载"、"执行" 等术语
+   - ❌ 测试用例、测试计划或 QA 过程
+   - ❌ 实现细节（框架、API、算法）
 
-   **✅ REQUIRED PATTERNS** - These test requirements quality:
-   - ✅ "Are [requirement type] defined/specified/documented for [scenario]?"
-   - ✅ "Is [vague term] quantified/clarified with specific criteria?"
-   - ✅ "Are requirements consistent between [section A] and [section B]?"
-   - ✅ "Can [requirement] be objectively measured/verified?"
-   - ✅ "Are [edge cases/scenarios] addressed in requirements?"
-   - ✅ "Does the spec define [missing aspect]?"
+   **✅ 必要模式** — 这些用于测试需求质量：
+   - ✅ "是否为 [场景] 定义/指定/记录了 [需求类型]？"
+   - ✅ "是否将 [模糊术语] 用具体标准量化/澄清？"
+   - ✅ "[章节 A] 与 [章节 B] 之间的需求是否一致？"
+   - ✅ "该需求能否被客观测量/验证？"
+   - ✅ "是否在需求中处理了 [边界情况/场景]？"
+   - ✅ "规范是否定义了 [缺失方面]？"
 
-6. **Structure Reference**: Generate the checklist following the canonical template in `.specify/templates/checklist-template.md` for title, meta section, category headings, and ID formatting. If template is unavailable, use: H1 title, purpose/created meta lines, `##` category sections containing `- [ ] CHK### <requirement item>` lines with globally incrementing IDs starting at CHK001.
+6. **结构参考**：按 `.specify/templates/checklist-template.md` 中的规范模板生成检查表（用于标题、元信息、类别标题和 ID 格式）。若模板不可用，则使用：H1 标题、目的/创建元信息行、`##` 类别节，包含 `- [ ] CHK### <requirement item>` 行，全球增量 ID 从 CHK001 开始。
 
-7. **Report**: Output full path to created checklist, item count, and remind user that each run creates a new file. Summarize:
-   - Focus areas selected
-   - Depth level
-   - Actor/timing
-   - Any explicit user-specified must-have items incorporated
+7. **报告**：输出已创建检查表的完整路径、条目数量，并提醒用户每次运行会创建新文件。总结：
+   - 选择的关注领域
+   - 深度级别
+   - 参与者/时机
+   - 已纳入的用户明确要求的必须项
 
-**Important**: Each `/speckit.checklist` command invocation creates a checklist file using short, descriptive names unless file already exists. This allows:
+**重要**：每次 `/speckit.checklist` 命令调用都会创建一个短且描述性的检查表文件名（除非该文件已存在）。这允许：
 
-- Multiple checklists of different types (e.g., `ux.md`, `test.md`, `security.md`)
-- Simple, memorable filenames that indicate checklist purpose
-- Easy identification and navigation in the `checklists/` folder
+- 创建不同类型的多个检查表（例如：`ux.md`、`test.md`、`security.md`）
+- 使用简单、易记的文件名来指示检查表目的
+- 在 `checklists/` 文件夹中便于识别和导航
 
-To avoid clutter, use descriptive types and clean up obsolete checklists when done.
+为避免混乱，请使用描述性类型并在完成后清理过时的检查表。
 
 ## Example Checklist Types & Sample Items
 

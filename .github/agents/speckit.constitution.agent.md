@@ -3,7 +3,7 @@ description: 从交互式或提供的原则输入创建或更新项目章程，�
 handoffs: 
   - label: Build Specification
     agent: speckit.specify
-    prompt: Implement the feature specification based on the updated constitution. I want to build...
+      prompt: 基于更新后的章程实现功能规范。我想要构建...
 ---
 
 ## 用户输入
@@ -68,12 +68,12 @@ $ARGUMENTS
    - 标记为人工后续处理的任何文件。
    - 建议的提交信息（例如：`docs: amend constitution to vX.Y.Z (principle additions + governance update)`）。
 
-Formatting & Style Requirements:
+格式与样式要求：
 
-- Use Markdown headings exactly as in the template (do not demote/promote levels).
-- Wrap long rationale lines to keep readability (<100 chars ideally) but do not hard enforce with awkward breaks.
-- Keep a single blank line between sections.
-- Avoid trailing whitespace.
+- 使用与模板完全一致的 Markdown 标题层级（不要降级或升级标题层级）。
+- 对较长的理由行进行折行以保持可读性（理想 <100 字），但不要为了硬性换行而破坏句意。
+- 在章节之间保留单个空行。
+- 避免行尾多余空白。
 
 If the user supplies partial updates (e.g., only one principle revision), still perform validation and version decision steps.
 

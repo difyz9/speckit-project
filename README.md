@@ -1,10 +1,152 @@
-# Spec-Kit 中文版 🇨🇳
+# Spec‑Kit 中文版 🇨🇳
 
-> GitHub Spec-Kit 的完整中文汉化版本 | 规范驱动开发工具包
+简洁、结构化的规范驱动开发工具包，配合 GitHub Copilot 高效完成“规范 → 计划 → 任务 → 实施”的全流程。
 
-[![GitHub](https://img.shields.io/badge/GitHub-spec--kit-blue)](https://github.com/github/spec-kit)
-[![Language](https://img.shields.io/badge/语言-中文-red)](README.md)
-[![Status](https://img.shields.io/badge/状态-稳定-green)](README.md)
+## 目录
+- 介绍与优势
+- 快速开始
+- 工作流与命令
+- 项目结构
+- 使用示例
+- 系统要求
+- 贡献与许可
+- 相关链接
+
+## 🌟 介绍与优势
+
+Spec‑Kit 通过规范驱动开发（Spec‑Driven Development, SDD）将需求与实现有机衔接：
+- 结构化流程：规范 → 计划 → 任务 → 实施
+- 技术无关：先明确“是什么/为什么”，再决定“怎么做”
+- 迭代细化：分阶段沉淀，不一次性“生成一切”
+- Copilot 友好：命令与模板针对 AI 协作优化
+
+## 🚀 快速开始
+
+### 1. 安装 Specify CLI
+
+选择持久化安装（推荐）：
+
+```bash
+uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+```
+
+### 2. 初始化项目
+
+在你的项目目录中运行：
+
+```bash
+# 创建新项目
+specify init my-project --ai copilot
+
+# 或在现有项目中初始化
+specify init .  --ai copilot
+# 或使用 --here 标志
+specify init --here --ai copilot
+```
+
+## 🧭 工作流与命令
+
+初始化完成后，在 VS Code 中使用 GitHub Copilot 时，你将可以使用以下 **斜杠命令**：
+
+### 核心命令
+
+| 命令 | 用途 | 说明 |
+|------|------|------|
+| `/speckit.constitution` | 建立项目原则 | 设定不可协商的项目规则与质量门槛 |
+| `/speckit.specify` | 定义需求 | 关注“是什么/为什么”，生成规范文档 |
+| `/speckit.plan` | 技术规划 | 关注“怎么做”，输出技术方案与架构 |
+| `/speckit.tasks` | 生成任务列表 | 将实施计划分解为可执行的任务 |
+| `/speckit.implement` | 执行实施 | 根据计划执行所有任务并构建功能 |
+
+### 辅助命令
+
+| 命令 | 用途 |
+|------|------|
+| `/speckit.clarify` | 澄清不明确的需求 |
+| `/speckit.analyze` | 跨文件一致性与覆盖度分析 |
+| `/speckit.checklist` | 生成“需求的单元测试”式质量清单 |
+
+## 📚 使用示例
+
+### 步骤 1：建立项目原则
+
+```
+/speckit.constitution 创建关注代码质量、测试标准、用户体验一致性和性能要求的原则
+```
+
+### 步骤 2：创建功能规范
+
+```
+/speckit.specify 构建一个照片管理应用，可以将照片组织到不同的相册中。相册按日期分组，可以在主页面上通过拖放重新组织。
+```
+
+**重要提示**：在这个阶段，尽可能明确地说明你想构建**什么**以及**为什么**，但不要关注技术栈。
+
+### 步骤 3：创建技术实施计划
+
+```
+/speckit.plan 应用使用 Vite，尽量减少库的数量。尽可能使用原生 HTML、CSS 和 JavaScript。图片不上传到任何地方，元数据存储在本地存储中。
+```
+
+### 步骤 4：分解任务
+
+```
+/speckit.tasks
+```
+
+这将生成一个详细的任务列表，包含：
+- 按用户故事组织的任务
+- 依赖关系管理
+- 可并行执行的标记
+- 具体的文件路径
+
+### 步骤 5：执行实施
+
+```
+/speckit.implement
+```
+
+Copilot 将按照正确的顺序执行任务，遵循依赖关系和并行执行标记。
+
+## 🎯 关键优势（摘要）
+
+1. 结构化开发：从需求到实施的清晰流程
+2. 技术无关：先定义需求，再选择技术栈
+3. 迭代细化：多步骤细化，减少返工
+4. Copilot 深度集成：专门优化的工作流程
+
+## 📁 项目结构
+
+初始化后，你的项目将包含：
+
+```
+.specify/
+├── memory/
+│   └── constitution.md        # 项目原则
+├── scripts/                   # 辅助脚本
+├── specs/                     # 功能规范
+│   └── 001-feature-name/
+│       ├── spec.md           # 功能规范
+│       ├── plan.md           # 实施计划
+│       └── tasks.md          # 任务分解
+└── templates/                 # 模板文件
+```
+
+## 🔧 系统要求
+
+- **操作系统**: Linux/macOS/Windows
+- **GitHub Copilot**: 在 VS Code 中安装并激活
+- **Python**: 3.11+
+- **uv**: 用于包管理
+- **Git**: 版本控制
+
+## 📖 更多资源
+
+- [完整文档](https://github.github.io/spec-kit/)
+- [详细方法论](https://github.com/github/spec-kit/blob/main/spec-driven.md)
+- [视频教程](https://www.youtube.com/watch?v=a9eR1xsfvHg)
+
+通过这种规范驱动的开发方式，你可以充分发挥 GitHub Copilot 的能力，更系统、更高质量地构建软件！🚀
 
 ---
 
